@@ -1,15 +1,20 @@
 (function(global){
 
     var Config = {
-        RANDOM_HALF_SIZE: 10,
-        FRICTION: 0.8,
-        HIGH_POINT_Y: 2000,
-        LOW_POINT_Y: -2000
+        REQUEST_URL: 'http://localhost:8100/api/csc/',
+        PARTICLE_COUNT: 500,
+        FLUCT: 10,
+        GRAVITY: 5,
+        SPEED_MAX: 30,
+        VECTOR3_RANDOM: new THREE.Vector3(2000, 2000, 2000),
+        VECTOR3_MAX: new THREE.Vector3(2000, 2000, 2000),
+        VECTOR3_MIN: new THREE.Vector3(-2000, -2000, -2000)
     };
 
 
     var scene, camera, renderer;
     var geometry, material, mesh, particles;
+    var speed = 0;
 
     //初期設定
     function init() {
@@ -18,48 +23,37 @@
         scene.fog = new THREE.FogExp2( 0x000000, 0.001 );
 
         camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 1, 10000 );
-        camera.position.z = 1000;
-
-        // geometry = new THREE.BoxGeometry( 200, 200, 200 );
-        // material = new THREE.MeshBasicMaterial( { color: 0x888888 } );
-        //
-        // mesh = new THREE.Mesh( geometry, material );
-        // scene.add( mesh );
-
+        camera.position.z = 500;
 
         geometry = new THREE.Geometry();
 
-        sprite = THREE.ImageUtils.loadTexture( "textures/snow.png" );
+        var sprite = THREE.ImageUtils.loadTexture( "textures/snow.png" );
 
-        for ( i = 0; i < 500; i ++ ) {
-
-            var vertex = new THREE.Vector3();
-            vertex.x = 2000 * Math.random() - 1000;
-            vertex.y = 2000 * Math.random() - 1000;
-            vertex.z = 100 * Math.random() - 50;
-            vertex.vx = Math.random() * Config.RANDOM_HALF_SIZE * 2 - Config.RANDOM_HALF_SIZE;
-            vertex.vy = 0;
-            vertex.vz = Math.random() * Config.RANDOM_HALF_SIZE * 2 - Config.RANDOM_HALF_SIZE;
-
-            geometry.vertices.push( vertex );
-
+        for ( i = 0; i < Config.PARTICLE_COUNT; ++i ) {
+            var vertices = new THREE.Vector3(
+                Config.VECTOR3_RANDOM.x * 2 * Math.random() - Config.VECTOR3_RANDOM.x,
+                Config.VECTOR3_RANDOM.y * 2 * Math.random() - Config.VECTOR3_RANDOM.y,
+                Config.VECTOR3_RANDOM.z * 2 * Math.random() - Config.VECTOR3_RANDOM.z
+            )
+            vertices.bx = vertices.x;
+            geometry.vertices.push( vertices );
         }
 
         material = new THREE.PointCloudMaterial({
-            size: 35,
-            sizeAttenuation: false,
+            size: 32,
+            sizeAttenuation: true,
             map: sprite,
             alphaTest: 0.5,
             transparent: true
         });
-        // material.color.setHSL( 1.0, 1.0, 0.7 );
+
         material.color.setRGB( 255, 255, 255);
 
         particles = new THREE.PointCloud( geometry, material );
         scene.add( particles );
 
 
-        renderer = new THREE.WebGLRenderer();
+        renderer = new THREE.WebGLRenderer({ alpha: true });
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
 
@@ -69,31 +63,21 @@
 
     //アニメーション
     function animate() {
-
         requestAnimationFrame( animate );
-        //setTimeout(animate,1000/42)
-
-        // mesh.rotation.x += 0.01;
-        // mesh.rotation.y += 0.02;
-
-        var vertices = [];
         for(var i in geometry.vertices){
-            geometry.vertices[i].vx *= Config.FRICTION;
-            geometry.vertices[i].vz *= Config.FRICTION;
-
-            geometry.vertices[i].x += geometry.vertices[i].vx;
-            geometry.vertices[i].y += -4.5;
-            geometry.vertices[i].z += geometry.vertices[i].vz;
-
-            if(geometry.vertices[i].y > Config.LOW_POINT_Y){
-                vertices.push(geometry.vertices[i]);
-            }
+            geometry.vertices[i].x = geometry.vertices[i].bx + Math.sin(geometry.vertices[i].y / 50) * Config.FLUCT;
+            geometry.vertices[i].y -= Config.GRAVITY;
+            geometry.vertices[i].z += speed;
+            ['x', 'y', 'z'].map(function(prop){
+                if(geometry.vertices[i][prop] > Config.VECTOR3_MAX[prop]){
+                    geometry.vertices[i][prop] = geometry.vertices[i][prop] % Config.VECTOR3_MAX[prop] + Config.VECTOR3_MIN[prop];
+                }else if(geometry.vertices[i][prop] < Config.VECTOR3_MIN[prop]){
+                    geometry.vertices[i][prop] = geometry.vertices[i][prop] % Config.VECTOR3_MIN[prop] + Config.VECTOR3_MAX[prop];
+                }
+            });
         }
-        geometry.vertices = vertices;
         geometry.verticesNeedUpdate = true;
-
         renderer.render( scene, camera );
-
     }
 
     //リサイズイベント
@@ -105,11 +89,32 @@
         renderer.setSize( w, h );
     }
 
+    //データ取得
+    function fetchData(){
+        var req = new XMLHttpRequest({ mozSystem: true });
+        req.open('GET', Config.REQUEST_URL, true);
+        req.onreadystatechange = function(e){
+            if(req.readyState === 4){
+                if(req.status === 200){
+                    var json = JSON.parse(req.responseText);
+                    if(json.hasOwnProperty('speed')){
+                        speed += (json.speed - speed) * 0.5;
+                    }
+                }else{
+                    //error
+                }
+                setTimeout(fetchData, 500);
+            }
+        };
+        req.send(null);
+    }
+
 
     //ウィンドウイベント登録
     global.addEventListener('load', function() {
         init();
         animate();
+        fetchData();
     });
     global.addEventListener('resize', onWindowResize, false);
 
