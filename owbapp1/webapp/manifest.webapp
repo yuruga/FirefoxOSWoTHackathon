@@ -1,0 +1,19 @@
+{
+  "name": "cycle55",
+  "description": "cycle55",
+  "default_locale": "en",
+  "version": "0.1",
+  "launch_path": "/index.html",
+  "icons": {
+    "16": "/images/icon_16.png",
+    "48": "/images/icon_48.png",
+    "128": "/images/icon_128.png"
+  },
+  "type": "certified",
+  "permissions": {
+    "bluetooth": {},
+    "settings": {
+      "access": "readwrite"
+    }
+  }
+}

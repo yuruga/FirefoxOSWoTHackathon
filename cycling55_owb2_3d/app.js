@@ -31,7 +31,7 @@
 
         sprite = THREE.ImageUtils.loadTexture( "textures/snow.png" );
 
-        for ( i = 0; i < 10000; i ++ ) {
+        for ( i = 0; i < 500; i ++ ) {
 
             var vertex = new THREE.Vector3();
             vertex.x = 2000 * Math.random() - 1000;
@@ -71,6 +71,7 @@
     function animate() {
 
         requestAnimationFrame( animate );
+        //setTimeout(animate,1000/42)
 
         // mesh.rotation.x += 0.01;
         // mesh.rotation.y += 0.02;
@@ -81,7 +82,7 @@
             geometry.vertices[i].vz *= Config.FRICTION;
 
             geometry.vertices[i].x += geometry.vertices[i].vx;
-            geometry.vertices[i].y += -0.5;
+            geometry.vertices[i].y += -4.5;
             geometry.vertices[i].z += geometry.vertices[i].vz;
 
             if(geometry.vertices[i].y > Config.LOW_POINT_Y){
