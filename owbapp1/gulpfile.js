@@ -50,7 +50,7 @@ gulp.task('server', ['js','css'], function(){
 //concat libs
 gulp.task('lib_js', function(){
   libs = [
-    //'bower_components/jquery/dist/jquery.min.js'
+    'bower_components/jquery/dist/jquery.min.js'
   ];
 
   return gulp.src(libs)
@@ -75,7 +75,7 @@ gulp.task('transpileEs', function(){
 });
 
 gulp.task('browserify', ['transpileEs'], function(){
-  return browserify('./source/_temp/ble/main.js')
+  return browserify('./source/_temp/main.js')
   .bundle()
   .pipe(source('ble.js'))
   .pipe(buffer())

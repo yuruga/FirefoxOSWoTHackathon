@@ -69,7 +69,6 @@ export class BleService{
   }
 
   start(){
-    console.log("ssss")
     let req = this.settingManager.createLock().get('bluetooth.enabled');
     req.onsuccess = ()=>{
         var enabled = req.result['bluetooth.enabled'];
@@ -97,8 +96,8 @@ export class BleService{
             console.log("defaultAdapter:" + this.defaultAdapter.name);
             this.defaultAdapter.onregisterclient = (event)=>{this._onRegisterClient(event)};
             this.defaultAdapter.onscanresult = (event)=>{this._onScanResult(event)};
-            this.defaultAdapter.onconnectble = (event)=>{this._onConnectble(event)};
-            this.defaultAdapter.ondisconnectble = (event)=>{this._onDisconnectble(event)};
+            this.defaultAdapter.onconnectble = (event)=>{this._onConnectBle(event)};
+            this.defaultAdapter.ondisconnectble = (event)=>{this._onDisconnectBle(event)};
             this.defaultAdapter.onsearchcomplete = (event)=>{this._onSearchComplete(event)};
             this.defaultAdapter.onsearchresult = (event)=>{this._onSearchResult(event)};
             this.defaultAdapter.ongetcharacteristic = (event)=>{this._onGetCharacteristics(event)};
@@ -127,7 +126,6 @@ export class BleService{
   }
 
   addEventListener(eventType, func, scope){
-    console.log(eventType, func);
     if(!this._listeners[eventType])
     {
       this._listeners[eventType] = [];
@@ -136,10 +134,20 @@ export class BleService{
   }
 
   performListenerFunction(eventType, ...args){
+    console.log("etype "+ eventType);
+    if(!this._listeners[eventType]){
+      console.log("NO Listener")
+      return;
+    }
     var l = this._listeners[eventType].length;
+
     for(var i = 0 ;i<l; i++)//( var listener in this._listeners[eventType])
     {
       var listener = this._listeners[eventType][i];
+      if(!listener['func'])
+      {
+        break;
+      }
       listener.func.apply(listener.scope, args);
     }
   }
@@ -149,7 +157,6 @@ export class BleService{
     console.log("scanDevices");
     this.deviceFoundCallback = deviceFoundCallback;
     if (this.scaning) {
-      console.log("aaaa")
             return;
         }
 
@@ -158,7 +165,6 @@ export class BleService{
         this.scaning = true;
         this.bleManager.scanLEDevice(this.client_if, true);
         this.searchTimer = setTimeout(()=>{
-            console.log("hhh",this.bleManager);
             this.bleManager.scanLEDevice(this.client_if, false);
             clearTimeout(this.searchTimer);
             this.searchTimer = undefined;
@@ -172,6 +178,15 @@ export class BleService{
   stopScanDevices(){
     this.scaning = false;
   }
+
+  stopScanServices(){
+    this.scanService = false;
+  }
+
+  stopScanCharacteristic(){
+    this.scanCharacteristic = false;
+  }
+
   //デバイスID取得
   getDevices(){
     return this._devices;
@@ -194,11 +209,13 @@ export class BleService{
 
 
   connectDevice(device){
+    console.log("conn");
     this.bleManager.connectBle(this.client_if, device.address, true);
     this.bd_addr = device.address;
   }
 
   selectService(serviceId){
+    console.log("selectService");
     this.select_srvc_id = serviceId;
     this.bleManager.getIncludeService(this.conn_id, this.select_srvc_id, this.start_incl_srvc_id);
     this.start_char_id = {
@@ -209,21 +226,19 @@ export class BleService{
     this.bleManager.getCharacteristic(this.conn_id, this.select_srvc_id, this.start_char_id);
   }
 
-  selectCharacteristic(carId){
+  selectCharacteristic(charId){
+    console.log("selectCCCC");
     this.select_char_id = charId;
     this.start_descr_id = {
         uuid: "",
         inst_id: ""
     };
-    bleManager.getDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.start_descr_id);
-    bleManager.readCharacteristic(this.conn_id, this.select_srvc_id, this.select_char_id, this.auth_req);
+    this.bleManager.getDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.start_descr_id);
+    //this.bleManager.readCharacteristic(this.conn_id, this.select_srvc_id, this.select_char_id, this.auth_req);
 
   }
 
-  //　read characteristics
-  readCharacteristics(charId){
 
-  }
 
   //　write characteristics
   writeCharacteristics(charId, value){
@@ -232,18 +247,28 @@ export class BleService{
 
   //　read descriptor
   readDescriptor(descriptorId){
+    console.log("rrrrrrrrrrrrrr")
     this.select_descr_id = descriptorId;
-    bleManager.readDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.select_descr_id, this.auth_req);
+    this.bleManager.readDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.select_descr_id, this.auth_req);
   }
 
   //　write descriptor
-  writeDescriptor(descriptorId, value, length){
-    this.select_descr_id = descriptorId;
-    Log.d(value + ":" + length, encodeURIComponent(v));
-    bleManager.writeDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.select_descr_id, 2, length, 0, value);
+  writeDescriptor( value, length){
+
+    //this.select_descr_id = descriptorId;
+    console.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwww",this.select_descr_id);
+    //this.bleManager.writeDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.select_descr_id, 2, length, 0, value);
+    this.isnotify = true;
+    var v ="0100"//decodeURI("%00")+decodeURI("%01");
+    var len = 4;
+    var wt = 2;
+    //this.bleManager.registerForNotification(client_if, bd_addr, select_srvc_id, select_char_id);
+    this.bleManager.writeDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.select_descr_id, wt, len, 0, v);
+
   }
 
   registerNotify(){
+    console.log("nnnnnnnnnnnnnnnnnnnnnnnn")
     this.isnotify = true;
     this.bleManager.registerForNotification(this.client_if, this.bd_addr, this.select_srvc_id, this.select_char_id);
   }
@@ -286,15 +311,13 @@ export class BleService{
   _onConnectBle(event){
     console.log("connectble status:" + event.status);
     console.log("connectble conn_id:" + event.conn_id);
-    if (event.status === 0) {
-        //$('#connect_state').html('SearchService...');
+    if (event.status == 0) {
         this.conn_id = event.conn_id;
-        //$("#service_list li").remove();
         this.service_scaning = true;
-        this.bleManager.searchService(conn_id, '');
+        this.bleManager.searchService(this.conn_id, '');
         if (!this.rssi_timer) {
             this.rssi_timer = setInterval(()=>{
-                bleManager.readRemoteRssi(this.client_if, this.bd_addr);
+                this.bleManager.readRemoteRssi(this.client_if, this.bd_addr);
             }, 5000);
         }
         this.performListenerFunction(BleService.Event_ON_DEVICE_CONNECTED);
@@ -305,7 +328,7 @@ export class BleService{
   _onDisconnectBle(event){
     console.log("disconnectble status:" + event.status);
     if (event.status == 0) {
-        clearInterval(rssi_timer);
+        clearInterval(this.rssi_timer);
         this.rssi_timer = undefined;
         this.conn_id = undefined;
         this.performListenerFunction(BleService.Event_ON_DEVICE_DISCONNECTED);
@@ -322,8 +345,8 @@ export class BleService{
   _onSearchResult(event){
     console.log("onSearchResult:" + event);
     console.log("srvc_id_id_uuid:" + event.srvc_id_id_uuid);
-    console.log("srvc_id_id_inst_id:" + event.srvc_id_id_inst_id);
-    console.log("srvc_id_is_primary:" + event.srvc_id_is_primary);
+    /*console.log("srvc_id_id_inst_id:" + event.srvc_id_id_inst_id);
+    console.log("srvc_id_is_primary:" + event.srvc_id_is_primary);*/
     var srvc_id = {
         uuid: event.srvc_id_id_uuid,
         inst_id: event.srvc_id_id_inst_id,
@@ -337,9 +360,9 @@ export class BleService{
   _onGetCharacteristics(event){
     console.log("onGetCharacteristic:" + event);
     console.log("state:" + event.status);
-    console.log("char_id_uuid:" + event.char_id_uuid);
+    /*console.log("char_id_uuid:" + event.char_id_uuid);
     console.log("char_id_inst_id:" + event.char_id_inst_id);
-    console.log("char_prop:" + event.char_prop);
+    console.log("char_prop:" + event.char_prop);*/
 
     var char_id = {
         uuid: event.char_id_uuid,
@@ -352,14 +375,14 @@ export class BleService{
         prop: event.char_prop
     };
     this._addCharacteristic(characteristic, char_id);
-    this.performListenerFunction(BleService.Event_ON_CHARACTORISTIC_FOUND, characteristic);
+    this.performListenerFunction(BleService.Event_ON_CHARACTERISTIC_FOUND, characteristic);
   }
 
   //
-  _onGetDiscriptor(event){
+  _onGetDescriptor(event){
     console.log("descr_status:" + event.status);
     console.log("descr_id_uuid:" + event.descr_id_uuid);
-    console.log("descr_id_inst_id:"  + event.descr_id_inst_id);
+    //console.log("descr_id_inst_id:"  + event.descr_id_inst_id);
     if (event.status != 0) {
         return;
     }
@@ -416,15 +439,15 @@ export class BleService{
     _onReadDescriptor(event) {
       console.log("onReadDescriptor:" + event.value);
       this.des_value = event.value;
-      console.log("start writeDescriptor  select_srvc_id ::" + " : " + select_srvc_id.uuid);
-      console.log("start writeDescriptor  select_char_id ::" + " : " + select_char_id.uuid);
-      console.log("start writeDescriptor  select_descr_id::" + " : " + select_descr_id.uuid);
-      //$('#des_read_data').html(des_value);
+      console.log("start writeDescriptor  select_srvc_id ::" + " : " + this.select_srvc_id.uuid);
+      console.log("start writeDescriptor  select_char_id ::" + " : " + this.select_char_id.uuid);
+      console.log("start writeDescriptor  select_descr_id::" + " : " + this.select_descr_id.uuid);
+      this.performListenerFunction(BleService.Event_ON_READ_DESCRIPTOR, this.des_value);
     }
 
     _onWriteDescriptor(event) {
       console.log("onWriteDescriptor status:" + event.status);
-      this.performListenerFunction(BleService.Event_ON_DESCRIPTER_WROTE, (event.status == 0) ? true : false);
+      this.performListenerFunction(BleService.Event_ON_DESCRIPTOR_WROTE, (event.status == 0) ? true : false);
       this.bleManager.executeWrite(this.conn_id, 0);
     }
 
@@ -459,12 +482,20 @@ export class BleService{
     }
     _addCharacteristic(characteristic)
     {
-      if (this.start_char_id && this.start_char_id.uuid == this.char_id.uuid) {
+      console.log("ssssssssssssssssssssss",this.start_char_id,characteristic.uuid);
+      if (this.start_char_id && this.start_char_id.uuid == characteristic.uuid) {
+          console.log("ffffff");
           return;
       }
       this._characteristics.push(characteristic);
-      this.start_char_id = this.char_id;
-      this.bleManager.getCharacteristic(this.conn_id, this.select_srvc_id, this.char_id);
+      this.start_char_id = characteristic;
+
+      if(!this.select_char_id)
+      {
+        console.log("NEXTXXXXXXX")
+        this.bleManager.getCharacteristic(this.conn_id, this.select_srvc_id, this.start_char_id);
+      }
+
     }
 
     _addDescriptor(descriptor)
@@ -474,7 +505,7 @@ export class BleService{
       }
       this._descriptors.push(descriptor);
       this.start_descr_id = descriptor;
-      bleManager.getDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.start_descr_id);
+      this.bleManager.getDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.start_descr_id);
     }
 
 
@@ -486,6 +517,7 @@ BleService.Event_ON_SERVICE_FOUND = "onServiceFound";
 BleService.Event_ON_CHARACTERISTIC_FOUND = "onCharacteristicFound";
 BleService.Event_ON_DESCRIPTOR_FOUND = "onDescriptorFound";
 BleService.Event_ON_REGISTER_NOTIFY = "onRegisterNotify";
-BleService.Event_ON_DESCRIPTER_WROTE = "onDescriptorWrote";
+BleService.Event_ON_DESCRIPTOR_WROTE = "onDescriptorWrote";
+BleService.Event_ON_READ_DESCRIPTOR = "onReadDescriptor";
 BleService.Event_ON_READ_CHARACTERISTIC = "onReadCgaracteristic";
 BleService.Event_ON_NOTIFY = "onNotify";

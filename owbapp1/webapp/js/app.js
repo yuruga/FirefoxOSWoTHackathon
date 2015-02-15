@@ -1,2 +1,4 @@
 
-//csc.init();
+$(function () {
+  window.csc.init();
+})
