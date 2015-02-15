@@ -14,6 +14,7 @@
     "bluetooth": {},
     "settings": {
       "access": "readwrite"
-    }
+    },
+    "systemXHR": {"description": "xhr"}
   }
 }

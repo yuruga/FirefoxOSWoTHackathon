@@ -11,13 +11,18 @@ var BleService = require('./ble/BleService').BleService;
 var SyncService = require('./sync/SyncService').SyncService;
 var CSC = (function () {
   var CSC = function CSC() {
+    this.w_count = 0;
+    this.c_count = 0;
+
+    this.w_buffer = [];
+
     console.log("const");
     //this.init();
   };
 
   CSC.prototype.init = function () {
     this.ble = new BleService();
-    this.sync = new SyncService();
+    this.sync = new SyncService(CONFIG.API);
     this.ble.addEventListener(BleService.Event_ON_CLIENT_READY, this.onBleClientReady, this);
     this.ble.addEventListener(BleService.Event_ON_REGISTER_NOTIFY, this.onRegisterNotify, this);
     this.ble.addEventListener(BleService.Event_ON_NOTIFY, this.onNotify, this);
@@ -107,8 +112,55 @@ var CSC = (function () {
     this.sync.send(this._calcCSC(value));
   };
 
-  CSC.prototype._calcCSC = function () {
-    return { s: 30.5, c: 70.2 };
+  CSC.prototype._calcCSC = function (value) {
+    //value = "032e0000007b7514008b7b";
+    var wc_hex = value.substr(8, 2) + value.substr(6, 2) + value.substr(4, 2) + value.substr(2, 2);
+    var wdt_hex = value.substr(12, 2) + value.substr(10, 2);
+
+    var cc_hex = value.substr(16, 2) + value.substr(14, 2);
+    var cdt_hex = value.substr(20, 2) + value.substr(18, 2);
+
+
+
+
+
+    var w_dt = parseInt(wdt_hex, 16);
+    var w_count_new = parseInt(wc_hex, 16);
+    var w_dc = w_count_new - this.w_count;
+
+    this.w_buffer.push([w_dt, w_dc]);
+    if (this.w_buffer.length > 3) {
+      this.w_buffer.shift();
+    }
+
+    var wc = 0;
+    var wt = 0;
+    var l = this.w_buffer.length;
+    for (var i = 0; i < l; i++) {
+      wc += this.w_buffer[i][1];
+      wt += this.w_buffer[i][0];
+    }
+
+    var trip = wc * CONFIG.WHEEL_SIZE; //w_dc * CONFIG.WHEEL_SIZE;///mms
+
+    var c_dt = parseInt(cdt_hex, 16);
+    var c_count_new = parseInt(cc_hex, 16);
+
+    var c_dc = c_count_new - this.c_count;
+
+
+
+    //console.log(c_count_new, c_dc, c_dt);
+
+    this.w_count = w_count_new;
+    this.c_count = c_count_new;
+
+    var sp = trip * 1024 * 60 * 60 / wt / 1000 / 1000;
+    var cd = c_dc * 1024 * 60 * 60 / c_dt;
+
+    //console.log(trip*1024*60*60/w_dt/1000/1000*49, c_dc*1024*60*60/c_dt)
+    console.log(sp, cd);
+    return { s: sp, c: cd };
   };
 
   CSC.prototype.onUnregisterNOtify = function (success) {};
@@ -579,7 +631,7 @@ var BleService = (function () {
   };
 
   BleService.prototype._onNotify = function (event) {
-    console.log("onNotify value:" + event.value);
+    /*console.log("onNotify value:" + event.value);
     console.log("onNotify bda:" + event.bda);
     console.log("onNotify srvc_id_id_uuid:" + event.srvc_id_id_uuid);
     console.log("onNotify srvc_id_id_inst_id:" + event.srvc_id_id_inst_id);
@@ -587,7 +639,7 @@ var BleService = (function () {
     console.log("onNotify char_id_uuid:" + event.char_id_uuid);
     console.log("onNotify char_id_inst_id:" + event.char_id_inst_id);
     console.log("onNotify len:" + event.len);
-    console.log("onNotify is_notify:" + event.is_notify);
+    console.log("onNotify is_notify:" + event.is_notify);*/
     this.performListenerFunction(BleService.Event_ON_NOTIFY, event.value);
   };
 
@@ -687,24 +739,27 @@ BleService.Event_ON_NOTIFY = "onNotify";
 "use strict";
 
 var CONFIG = exports.CONFIG = {
-  API: "/api/csc",
+  API: "http://192.168.1.20.:8080/api/postCSC",
   SIG_PREFIX: "0000",
   SIG_SURFIX: "-0000-1000-8000-00805f9b34fb",
   CSC_SERVICE_ID: "00001816-0000-1000-8000-00805f9b34fb",
   CSC_MEASUREMENT_CHARACTERISCTIC_ID: "00002a5b-0000-1000-8000-00805f9b34fb",
   CCCD_ID: "00002902-0000-1000-8000-00805f9b34fb",
-  CSC_BD_ADRESS: "84:dd:20:ec:b1:ef"
+  CSC_BD_ADRESS: "84:dd:20:ec:b1:ef",
+  WHEEL_SIZE: 1560
 };
 },{}],5:[function(require,module,exports){
 "use strict";
 
 var SyncService = (function () {
-  var SyncService = function SyncService() {
+  var SyncService = function SyncService(url) {
     console.log("sync");
+    this.url = url;
   };
 
   SyncService.prototype.send = function (value) {
     console.log("send", value);
+    $.post(this.url, { speed: value.s, cadence: value.c });
   };
 
   return SyncService;

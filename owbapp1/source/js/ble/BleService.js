@@ -411,7 +411,7 @@ export class BleService{
 
   //
   _onNotify(event) {
-      console.log("onNotify value:" + event.value);
+      /*console.log("onNotify value:" + event.value);
       console.log("onNotify bda:" + event.bda);
       console.log("onNotify srvc_id_id_uuid:" + event.srvc_id_id_uuid);
       console.log("onNotify srvc_id_id_inst_id:" + event.srvc_id_id_inst_id);
@@ -419,7 +419,7 @@ export class BleService{
       console.log("onNotify char_id_uuid:" + event.char_id_uuid);
       console.log("onNotify char_id_inst_id:" + event.char_id_inst_id);
       console.log("onNotify len:" + event.len);
-      console.log("onNotify is_notify:" + event.is_notify);
+      console.log("onNotify is_notify:" + event.is_notify);*/
       this.performListenerFunction(BleService.Event_ON_NOTIFY, event.value);
     }
 
