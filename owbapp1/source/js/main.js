@@ -14,6 +14,14 @@ class CSC{
     this.ble = new BleService();
     this.sync = new SyncService();
     this.ble.addEventListener(BleService.Event_ON_CLIENT_READY, this.onBleClientReady, this);
+    this.ble.addEventListener(BleService.Event_ON_REGISTER_NOTIFY, this.onRegisterNotify, this);
+    this.ble.addEventListener(BleService.Event_ON_NOTIFY, this.onNotify, this);
+    this.ble.addEventListener(BleService.Event_ON_DEVICE_FOUND, this.onScanDevices, this);
+    this.ble.addEventListener(BleService.Event_ON_SERVICE_FOUND, this.onServiceFound, this);
+    this.ble.addEventListener(BleService.Event_ON_CHARACTERISTIC_FOUND, this.onCharactoristicFound, this);
+    this.ble.addEventListener(BleService.Event_ON_DESCRIPTOR_FOUND, this.onDescripterFound, this);
+    this.ble.addEventListener(BleService.Event_ON_READ_DESCRIPTOR, this.onReadDescriptor, this);
+    this.ble.addEventListener(BleService.Event_ON_DESCRIPTOR_WROTE, this.onDescriptorWrote, this);
     this.ble.start();
   }
 
@@ -21,7 +29,7 @@ class CSC{
 
   onBleClientReady(){
     //console.log("onBleClientReady");
-    this.ble.addEventListener(BleService.Event_ON_DEVICE_FOUND, this.onScanDevices, this);
+
     this.ble.scanDevices();
   }
 
@@ -30,7 +38,7 @@ class CSC{
     if(CONFIG.CSC_BD_ADRESS === device.address)
     {
       this.ble.stopScanDevices();
-      this.ble.addEventListener(BleService.Event_ON_SERVICE_FOUND, this.onServiceFound, this);
+
       this.ble.connectDevice(device);
     }
   }
@@ -39,7 +47,7 @@ class CSC{
     //console.log("onServiceFound", serviceId.uuid);
     if(CONFIG.CSC_SERVICE_ID === serviceId.uuid)
     {
-      this.ble.addEventListener(BleService.Event_ON_CHARACTERISTIC_FOUND, this.onCharactoristicFound, this);
+
       this.ble.selectService(serviceId);
     }
   }
@@ -48,7 +56,7 @@ class CSC{
     //console.log("onCharactoristcFound", charId.uuid);
     if(CONFIG.CSC_MEASUREMENT_CHARACTERISCTIC_ID === charId.uuid)
     {
-      this.ble.addEventListener(BleService.Event_ON_DESCRIPTOR_FOUND, this.onDescripterFound, this);
+
       this.ble.selectCharacteristic(charId);
     }
   }
@@ -59,7 +67,7 @@ class CSC{
     {
       console.log("aaaa")
 
-      this.ble.addEventListener(BleService.Event_ON_READ_DESCRIPTOR, this.onReadDescriptor, this);
+
       //this.ble.addEventListener(BleService.Event_ON_REGISTER_NOTIFY, this.onRegisterNotify, this);
 
 
@@ -76,10 +84,9 @@ class CSC{
       this.onDescripterWrote(true);
     }else
     {
-      this.ble.addEventListener(BleService.Event_ON_DESCRIPTOR_WROTE, this.onDescriptorWrote, this);
+
       this.ble.writeDescriptor("0100", 4);
-      this.ble.addEventListener(BleService.Event_ON_REGISTER_NOTIFY, this.onRegisterNotify, this);
-      this.ble.addEventListener(BleService.Event_ON_NOTIFY, this.onNotify, this);
+
       this.ble.registerNotify();
     }
 
@@ -99,9 +106,7 @@ class CSC{
 
   onTryNotifyEnabled(){
     console.log("sssssssssssssssssssss",this.isNotifiRegistered , this.isNotifyEnabled)
-    if(this.isNotifiRegistered && this.isNotifyEnabled){
-      this.ble.addEventListener(BleService.Event_ON_NOTIFY, this.onNotify, this);
-    }
+    
   }
 
   onNotify(value){
