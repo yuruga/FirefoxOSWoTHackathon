@@ -1,7 +1,7 @@
 (function(global){
 
     var Config = {
-        REQUEST_URL: 'http://localhost:8100/api/csc/',
+        REQUEST_URL: 'http://192.168.1.20:8080/api/getCSC',
         PARTICLE_COUNT: 500,
         FLUCT: 10,
         GRAVITY: 5,
