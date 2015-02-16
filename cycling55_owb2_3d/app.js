@@ -22,7 +22,7 @@
         scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2( 0x000000, 0.001 );
 
-        sppedText = document.getElementById('speed');
+        // sppedText = document.getElementById('speed');
 
         camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 1, 10000 );
         camera.position.z = 500;
@@ -101,7 +101,7 @@
                     var json = JSON.parse(req.responseText);
                     if(json.hasOwnProperty('speed')){
                         speed += (json.speed - speed) * 0.5;
-                        sppedText.innerHTML = Math.floor(speed).toString();
+                        //sppedText.innerHTML = Math.floor(speed).toString();
                         console.log(Math.floor(speed));
                     }
                 }else{
