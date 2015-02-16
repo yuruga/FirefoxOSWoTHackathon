@@ -142,6 +142,7 @@ var CSC = (function () {
     }
 
     var trip = wc * CONFIG.WHEEL_SIZE; //w_dc * CONFIG.WHEEL_SIZE;///mms
+    //var trip = w_dc * CONFIG.WHEEL_SIZE;///mms
 
     var c_dt = parseInt(cdt_hex, 16);
     var c_count_new = parseInt(cc_hex, 16);
@@ -159,8 +160,8 @@ var CSC = (function () {
     var cd = c_dc * 1024 * 60 * 60 / c_dt;
 
     //console.log(trip*1024*60*60/w_dt/1000/1000*49, c_dc*1024*60*60/c_dt)
-    console.log(sp, cd);
-    return { s: sp, c: cd };
+    //console.log("aaaaaa"sp,cd);
+    return { s: Math.min(80, sp * 15), c: cd * 10 };
   };
 
   CSC.prototype.onUnregisterNOtify = function (success) {};
@@ -759,7 +760,7 @@ var SyncService = (function () {
 
   SyncService.prototype.send = function (value) {
     console.log("send", value);
-    $.post(this.url, { speed: value.s, cadence: value.c });
+    $.post(this.url, { speed: value.s.toFixed(3), cadence: value.c.toFixed(3) });
   };
 
   return SyncService;

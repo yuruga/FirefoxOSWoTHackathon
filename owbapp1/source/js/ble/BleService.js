@@ -247,7 +247,6 @@ export class BleService{
 
   //　read descriptor
   readDescriptor(descriptorId){
-    console.log("rrrrrrrrrrrrrr")
     this.select_descr_id = descriptorId;
     this.bleManager.readDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.select_descr_id, this.auth_req);
   }
@@ -256,7 +255,6 @@ export class BleService{
   writeDescriptor( value, length){
 
     //this.select_descr_id = descriptorId;
-    console.log("wwwwwwwwwwwwwwwwwwwwwwwwwwwwww",this.select_descr_id);
     //this.bleManager.writeDescriptor(this.conn_id, this.select_srvc_id, this.select_char_id, this.select_descr_id, 2, length, 0, value);
     this.isnotify = true;
     var v ="0100"//decodeURI("%00")+decodeURI("%01");
@@ -268,7 +266,6 @@ export class BleService{
   }
 
   registerNotify(){
-    console.log("nnnnnnnnnnnnnnnnnnnnnnnn")
     this.isnotify = true;
     this.bleManager.registerForNotification(this.client_if, this.bd_addr, this.select_srvc_id, this.select_char_id);
   }
@@ -345,8 +342,8 @@ export class BleService{
   _onSearchResult(event){
     console.log("onSearchResult:" + event);
     console.log("srvc_id_id_uuid:" + event.srvc_id_id_uuid);
-    /*console.log("srvc_id_id_inst_id:" + event.srvc_id_id_inst_id);
-    console.log("srvc_id_is_primary:" + event.srvc_id_is_primary);*/
+    console.log("srvc_id_id_inst_id:" + event.srvc_id_id_inst_id);
+    console.log("srvc_id_is_primary:" + event.srvc_id_is_primary);
     var srvc_id = {
         uuid: event.srvc_id_id_uuid,
         inst_id: event.srvc_id_id_inst_id,
@@ -360,10 +357,9 @@ export class BleService{
   _onGetCharacteristics(event){
     console.log("onGetCharacteristic:" + event);
     console.log("state:" + event.status);
-    /*console.log("char_id_uuid:" + event.char_id_uuid);
+    console.log("char_id_uuid:" + event.char_id_uuid);
     console.log("char_id_inst_id:" + event.char_id_inst_id);
-    console.log("char_prop:" + event.char_prop);*/
-
+    console.log("char_prop:" + event.char_prop);
     var char_id = {
         uuid: event.char_id_uuid,
         inst_id: event.char_id_inst_id
@@ -382,7 +378,7 @@ export class BleService{
   _onGetDescriptor(event){
     console.log("descr_status:" + event.status);
     console.log("descr_id_uuid:" + event.descr_id_uuid);
-    //console.log("descr_id_inst_id:"  + event.descr_id_inst_id);
+    console.log("descr_id_inst_id:"  + event.descr_id_inst_id);
     if (event.status != 0) {
         return;
     }
@@ -482,9 +478,9 @@ export class BleService{
     }
     _addCharacteristic(characteristic)
     {
-      console.log("ssssssssssssssssssssss",this.start_char_id,characteristic.uuid);
+
       if (this.start_char_id && this.start_char_id.uuid == characteristic.uuid) {
-          console.log("ffffff");
+
           return;
       }
       this._characteristics.push(characteristic);
@@ -492,7 +488,7 @@ export class BleService{
 
       if(!this.select_char_id)
       {
-        console.log("NEXTXXXXXXX")
+      
         this.bleManager.getCharacteristic(this.conn_id, this.select_srvc_id, this.start_char_id);
       }
 
